@@ -1,45 +1,107 @@
-import React from 'react';
-import Grid from '@mui/material/Grid';
+import React, { useState, useEffect } from 'react';
+import { Carousel } from 'react-responsive-carousel';
+import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import QRCode from 'qrcode.react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';  // Asegúrate de que esto esté importado
-
-const features = [
-    { title: "Portfolio", description: "Empower your startup's growth with personalized mentoring and guidance.", image: "/path-to-your-feature-image-1.png" },
-    { title: "Dashboard", description: "Manage your progress with a personalized dashboard.", image: "/path-to-your-feature-image-2.png" },
-    { title: "Meeting", description: "Schedule and manage your meetings effectively.", image: "/path-to-your-feature-image-3.png" },
-    { title: "Network", description: "Expand your network and leverage connections.", image: "/path-to-your-feature-image-4.png" }
-];
+import Modal from '@mui/material/Modal';
+import Backdrop from '@mui/material/Backdrop';
 
 const FeaturesSection = () => {
+    const [ips, setIps] = useState([]);
+    const [selectedQR, setSelectedQR] = useState(null); // Estado para el QR seleccionado
+    const [open, setOpen] = useState(false); // Estado para controlar el modal
+
+    useEffect(() => {
+        const fetchIPs = async () => {
+            try {
+                const simulatedIPs = [
+                    '192.168.1.1',
+                    '192.168.1.2',
+                    '192.168.1.3',
+                    '192.168.1.4',
+                    '192.168.1.5'
+                ];
+
+                const ipWithPort = simulatedIPs.map(ip => `${ip}:5173`);
+                setIps(ipWithPort);
+            } catch (error) {
+                console.error('Error fetching IPs:', error);
+            }
+        };
+
+        fetchIPs();
+    }, []);
+
+    const handleOpen = (ip) => {
+        setSelectedQR(ip); // Establecer el QR seleccionado
+        setOpen(true); // Abrir el modal
+    };
+
+    const handleClose = () => {
+        setOpen(false); // Cerrar el modal
+        setSelectedQR(null); // Limpiar el QR seleccionado
+    };
+
     return (
         <Box sx={{ padding: '50px 20px', backgroundColor: '#222', color: '#fff' }}>
             <Typography variant="h4" gutterBottom textAlign="center">
-                Key Features
+                IPs Carousel with QR Codes
             </Typography>
-            <Grid container spacing={4} justifyContent="center">
-                {features.map((feature, index) => (
-                    <Grid item key={index} xs={12} sm={6} md={3}>
-                        <Card sx={{ backgroundColor: '#333', color: '#fff' }}>
-                            <img src={feature.image} alt={feature.title} style={{ width: '100%' }} />
-                            <CardContent>
-                                <Typography variant="h5" component="div">
-                                    {feature.title}
-                                </Typography>
-                                <Typography variant="body2">
-                                    {feature.description}
-                                </Typography>
-                            </CardContent>
-                            <CardActions>
-                                <Button size="small" color="primary">Explore &gt;</Button>
-                            </CardActions>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+            {ips.length > 0 ? (
+                <Carousel showThumbs={false} showStatus={false} infiniteLoop autoPlay>
+                    {ips.map((ip, index) => (
+                        <div key={index} onClick={() => handleOpen(ip)}> {/* Abrir el modal al hacer clic */}
+                            <Card sx={{ backgroundColor: '#333', color: '#fff', textAlign: 'center', padding: '20px' }}>
+                                <QRCode value={ip} size={128} />
+                                <CardContent>
+                                    <Typography variant="body2" sx={{ marginTop: '10px', wordBreak: 'break-word' }}>
+                                        {ip}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    ))}
+                </Carousel>
+            ) : (
+                <Typography variant="h6" textAlign="center" sx={{ color: '#fff', marginTop: '20px' }}>
+                    No IPs available
+                </Typography>
+            )}
+            
+            <Modal
+                open={open}
+                onClose={handleClose}
+                closeAfterTransition
+                BackdropComponent={Backdrop}
+                BackdropProps={{
+                    timeout: 500,
+                }}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Box
+                    sx={{
+                        bgcolor: 'background.paper',
+                        border: 'none',
+                        boxShadow: 24,
+                        p: 4,
+                        outline: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(5px)',
+                        borderRadius: '10px',
+                    }}
+                >
+                    {selectedQR && <QRCode value={selectedQR} size={256} />} {/* Mostrar el QR seleccionado */}
+                </Box>
+            </Modal>
         </Box>
     );
 };
